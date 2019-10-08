@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Simple AJAX file</title>
+        <!-- Load the AJAX plumbing -->
+        <script src="AJAX-basics.js"></script>
+        <script src="papaparse.min.js"></script>
+        <!-- Define functions to make this page work -->
+        <script>
+            /* Takes the list of fire stations as a Javascript Array object.
+               Creates and returns a table containing the data about the fire
+               stations. */
+               function makeFireStationsTable(stationsArray) {
+                let columns = ['name', 'address', 'latitude', 'longitude'];
+                let table = document.createElement('table');
+
+                // Make header row
+                let row = document.createElement('tr');
+                for (let col of columns) {
+                    // For each column name, make a <th> cell and put the
+                    // column name into it.  Capitalize the name while doing so.
+                    row.appendChild(makeAndFillElt('th',
+                        col[0].toUpperCase() + col.slice(1)));
+                }
+                table.appendChild(row);
+
+                // Fill in the rest of the rows, one row for each station
+                for (let stationVal of stationsArray) {
+                    row = document.createElement('tr');
+                    for (colName of columns) {
+                        row.appendChild(makeAndFillElt('td',
+                            stationVal[colName]));
+                    }
+                    table.appendChild(row);
+                }
+
+                // Alternative approach to filling in rows,
+                // using Array.forEach() and closures
+                // stationsArray.forEach(function (stationVal) {
+                //     row = document.createElement('tr');
+                //     columns.forEach(function(colName) {
+                //         row.appendChild(makeAndFillElt('td',
+                //             stationVal[colName]));
+                //     });
+                //     table.appendChild(row);
+                // });
+
+                return table;
+            }
+
+        /* Takes the list of fire stations as a CSV string, parses it to JSON,
+            and uses the makeFireStationsTable function to create a table of
+            fire stations.  This table is then put into the result element. */
+            function makeStationsTable() {
+                let urlString = '/~phbrown/CSC335/GSP-Fire-Stations.csv';
+                let handlerFn = function (request) {
+                    let jsonData = Papa.parse(request.responseText, { header: true });
+                    console.log(jsonData.data);
+                    let elt = document.getElementById('table_target');
+                    // Clean out any old stuff
+                    elt.innerHTML = "";
+                    elt.appendChild(makeFireStationsTable(jsonData.data));
+                }
+                handleRequestOnCompletion(handlerFn, urlString);
+            }
+        </script>
+        </head>
+    <body>
+        <h1>Homework 1</h1>
+        <form>
+            <input type="button" value="Click to insert fire stations" onclick="makeStationsTable();" />
+        </form>
+        <div id="table_target"></div>
+    </body>
+</html>

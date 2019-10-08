@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Simple AJAX file</title>
+        <!-- Load the AJAX plumbing -->
+        <script src="AJAX-basics.js"></script>
+        <!-- Define functions to make this page work -->
+        <script>
+
+            /* Get a timestamp in text form, and display it in the element text_timestamp. */
+            function textTimestamp() {
+                updateElement('text_timestamp', '/~phbrown/CSC335/timestamp.php');
+            }
+
+            /* Get HTML (which includes a timestamp), and display it in the element
+               html_timestamp. */
+            function htmlTimestamp() {
+                updateElement('html_timestamp', '/~phbrown/CSC335/htmlchunk.php');
+            }
+
+            /* Get the text timestamp, but this time parse it in Javascript and wrap it in
+               Javascript-generated HTML before displaying it. */
+            function fancyTimestamp() {
+                let targetURL = '/~phbrown/CSC335/timestamp.php';
+                let fillFn = function (request) {
+                    let elt = document.getElementById('fancy_timestamp');
+                    elt.innerHTML = ""; // Clean out anything there
+
+                    // Make a regular expression to split the timestamp into date and time
+                    let regex = new RegExp('\([0-9]{2} [a-z]{3} [0-9]{4}\) \([0-9]{2}:[0-9]{2}:[0-9]{2}\)', 'i');
+                    let split = regex.exec(request.responseText);
+                    let date = split[1];
+                    let time = split[2];
+
+                    // Put the date in one <span>
+                    let dateSpan = makeAndFillElt('span', date);
+                    dateSpan.classList.add('fancy');
+                    elt.appendChild(dateSpan);
+
+                    // Put the time into a different <span>
+                    let timeSpan = makeAndFillElt('span', time);
+                    timeSpan.classList.add('fancy2');
+                    elt.appendChild(timeSpan);
+                };
+                handleRequestOnCompletion(fillFn, targetURL);
+            }
+
+            /* Takes the list of fire stations as a Javascript Array object.
+               Creates and returns a table containing the data about the fire
+               stations. */
+            function makeFireStationsTable(stationsArray) {
+                let columns = ['name', 'address', 'latitude', 'longitude'];
+                let table = document.createElement('table');
+
+                // Make header row
+                let row = document.createElement('tr');
+                for (let col of columns) {
+                    // For each column name, make a <th> cell and put the
+                    // column name into it.  Capitalize the name while doing so.
+                    row.appendChild(makeAndFillElt('th',
+                        col[0].toUpperCase() + col.slice(1)));
+                }
+                table.appendChild(row);
+
+                // Fill in the rest of the rows, one row for each station
+                for (let stationVal of stationsArray) {
+                    row = document.createElement('tr');
+                    for (colName of columns) {
+                        row.appendChild(makeAndFillElt('td',
+                            stationVal[colName]));
+                    }
+                    table.appendChild(row);
+                }
+
+                // Alternative approach to filling in rows,
+                // using Array.forEach() and closures
+                // stationsArray.forEach(function (stationVal) {
+                //     row = document.createElement('tr');
+                //     columns.forEach(function(colName) {
+                //         row.appendChild(makeAndFillElt('td',
+                //             stationVal[colName]));
+                //     });
+                //     table.appendChild(row);
+                // });
+
+                return table;
+            }
+
+            /* Get a list of fire stations in Spartanburg and Greenville counties
+               in JSON form from the server.  Create a table with the fire-station
+               data, and put the table into the <div> firestationsdiv.*/
+            function fireStations() {
+                let targetURL = '/~phbrown/CSC335/GSP-Fire-Stations.json';
+                let fillFn = function (request) {
+                    let elt = document.getElementById('firestationsdiv');
+                    elt.innerHTML = ""; // Clean out anything there
+
+                    // Get the JSON response from the request object.
+                    let data = JSON.parse(request.responseText);
+                    // data is now a Javascript object.  The JSON we got from
+                    //   the server makes data.stations to be an Array of the
+                    //   fire stations.
+                    elt.appendChild(makeFireStationsTable(data.stations));
+                };
+                handleRequestOnCompletion(fillFn, targetURL);
+            }
+        </script>
+        <style>
+            .fancy {
+                color: blueviolet;
+                font-family: cursive;
+                font-size: 140%;
+                padding-right: 0.5em;
+            }
+
+            .fancy2 {
+                color: green;
+                font-family: fantasy;
+                font-size: 180%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>Simple AJAX file</h1>
+
+        <!-- A simple text response from the server is suitable for simple queries. -->
+        <h2>Timestamp (text)</h2>
+        <form>
+            <input type="button" value="Update timestamp" onclick="textTimestamp();" />
+            <span id="text_timestamp"></span>
+        </form>
+
+        <!-- Getting the response in HTML allows much more involved formatting,
+         at the cost of increased server load. -->
+        <h2>Timestamp (HTML)</h2>
+        <form>
+            <input type="button" value="Update timestamp" onclick="htmlTimestamp();" />
+            <span id="html_timestamp"></span>
+        </form>
+
+        <!-- Getting the response as pure data (JSON, CSV, or XML) allows the
+         browser to do the formatting.  This gives less load on the server
+         and more flexibility in presenting the data. -->
+        <h2>Timestamp (text, formatted)</h2>
+        <form>
+            <input type="button" value="Update fancy timestamp" onclick="fancyTimestamp();" />
+            <span id="fancy_timestamp"></span>
+        </form>
+
+        <h2>GSP fire stations (from JSON)</h2>
+        <form>
+            <input type="button" value="Insert fire stations" onclick="fireStations();" />
+            <div id="firestationsdiv"></div>
+        </form>
+    </body>
+</html>
