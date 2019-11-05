@@ -22,25 +22,35 @@
     <?php
       
       function phb_clean_string($instring) {
-          return htmlentities(trim(substr($instring, 0, 1024)), ENT_HTML5);
+          return htmlentities(trim(substr($instring, 0, 1024)), ENT_QUOTES | ENT_HTML5);
           //return nl2br(htmlentities(trim(substr($instring, 0, $phb_max_input)),
             //                        ENT_HTML5));
       }
 
-      $phb_form_method = 'None';
-      $phb_data = array();
-      if ($_GET) {
-         $phb_form_method = 'GET';
-         $phb_data = $_GET;
+      function inputData() {
+          //var_dump($_SERVER);
+          $data = array();
+          if ($_GET) {
+              $data = $_GET;
+              $data['_phb_form_method'] = 'GET';
+          }
+          elseif ($_POST) {
+            $phb_form_method = 'POST';
+            $data = $_POST;
+            $data['_phb_form_method'] = 'POST';
+         }
+         elseif ($_SERVER['argv']) {
+            $data = $_SERVER['argv'];
+            $data['_phb_form_method'] = 'argv';
+         }
+         //var_dump($data);
+         return $data;
       }
-      elseif ($_POST) {
-         $phb_form_method = 'POST';
-         $phb_data = $_POST;
-      }
-      //var_dump($phb_data);
+
+      $phb_data = inputData();
     ?>
     
-    <h2>Form Data: <?php echo $phb_form_method; ?></h2>
+    <h2>Form Data: <?php echo $phb_data['_phb_form_method']; ?></h2>
 
     <?php
       if ($phb_data) {
