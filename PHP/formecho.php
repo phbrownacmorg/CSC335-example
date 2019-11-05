@@ -35,16 +35,26 @@
               $data['_phb_form_method'] = 'GET';
           }
           elseif ($_POST) {
-            $phb_form_method = 'POST';
-            $data = $_POST;
-            $data['_phb_form_method'] = 'POST';
-         }
-         elseif ($_SERVER['argv']) {
-            $data = $_SERVER['argv'];
-            $data['_phb_form_method'] = 'argv';
-         }
-         //var_dump($data);
-         return $data;
+              $data = $_POST;
+              $data['_phb_form_method'] = 'POST';
+          }
+          elseif ($_SERVER['argv']) {
+              $data = $_SERVER['argv'];
+              $data['_phb_form_method'] = 'argv';
+          }
+          //var_dump($data);
+          return $data;
+      }
+
+      function array_as_table_body($arr) {
+          $tbody = '';
+          foreach ($arr as $key => $value) {
+              if ($key !== '_phb_form_method') {
+                  $tbody = $tbody . '<tr><td class="key">' . phb_clean_string($key) . '</td>';
+                  $tbody = $tbody . '<td class="value">' . phb_clean_string($value) . '</td></tr>\n';
+              }
+          }
+          return $tbody;
       }
 
       $phb_data = inputData();
@@ -58,10 +68,7 @@
     <table>
       <tr><th>Variable</th><th>Value</th></tr>
       <?php
-      foreach ($phb_data as $key => $value) {
-          echo '<tr><td class="key">' . phb_clean_string($key) . "</td>";
-          echo '<td class="value">' . phb_clean_string($value) . "</td></tr>\n";
-      }
+          echo array_as_table_body($phb_data);
       ?>
     </table>
     <?php
